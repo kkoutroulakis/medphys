@@ -6,6 +6,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# ---------------------------------------
+# Global style for plots
+# ---------------------------------------
+plt.rcParams["font.family"] = ["Arial", "Times New Roman"]
+
 
 # ---------------------------------------
 # Load excel
@@ -142,6 +147,11 @@ def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks):
     ax.title.set_fontweight("bold")
     ax.xaxis.label.set_fontweight("bold")
     ax.yaxis.label.set_fontweight("bold")
+
+    # Enlarge font size on x,y axis
+    ax.tick_params(width=2, length=6, labelsize=16)
+    ax.set_xlabel(xlabel, fontsize=16)
+    ax.set_ylabel(ylabel, fontsize=16)
 
     # Bold tick values
     plt.setp(ax.get_xticklabels() + ax.get_yticklabels(), fontweight="bold")
