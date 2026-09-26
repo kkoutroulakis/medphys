@@ -1,5 +1,6 @@
-# vscode
+# local configs
 .vscode/
+.ruff_cache
 
 # Python-generated files
 __pycache__/
