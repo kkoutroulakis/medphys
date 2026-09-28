@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 # ---------------------------------------
@@ -117,6 +118,61 @@ def bland_altman_plot(
     _save(fig, save_path)
 
     return fig, ax, stats
+
+
+# ---------------------------------------------------------------------------
+# Grouped bar charts
+# ---------------------------------------------------------------------------
+def grouped_bar_chart(
+    df,
+    value_cols,
+    category_col=None,
+    labels=None,
+    colors=None,
+    title=None,
+    xlabel="",
+    ylabel="Value",
+    ylim=None,
+    yticks=None,
+    bar_width=0.6,
+    ax=None,
+    save_path=None,
+):
+    """
+    Draw one group of bars per row, with one bar per column in 'value_cols'
+    """
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 6))
+    else:
+        fig = ax.figure
+
+    labels = labels or value_cols
+    categories = df[category_col] if category_col is not None else range(1, len(df) + 1)
+    n_series = len(value_cols)
+    x = np.arange(len(df))
+    width = bar_width / n_series
+
+    for i, (col, label) in enumerate(zip(value_cols, labels)):
+        offset = (i - (n_series - 1) / 2) * width
+        ax.bar(
+            x + offset,
+            df[col],
+            width,
+            label=label,
+            color=None if colors is None else colors[i],
+        )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(categories)
+    ax.set_xlim(-0.6, len(df) - 0.4)
+    ax.grid(axis="x", visible=False)
+    ax.legend(fontsize=12)
+
+    _style_axes(ax, title, xlabel, ylabel, None, ylim, None, yticks)
+    _save(fig, save_path)
+
+    return fig, ax
 
 
 # ---------------------------------------------------------------------------
