@@ -54,7 +54,7 @@ def run_f_barchart():
     )
 
 
-@register("barchart-v", "Grouped bar chart of F_SECT vs F_VM")
+@register("barchart-v", "Grouped bar chart of V_SECT, V_VM and V_intersection")
 def run_v_barchart():
     # TODO: configs specific about the chart
     SHEET_NAME = "tripple_bar_chart"
