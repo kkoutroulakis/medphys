@@ -25,7 +25,7 @@ def run_bland_altman():
         title=None,
         xlabel="HU Average",
         ylabel=f"{TITLE}: HU Difference",
-        save_path=OUT_DIR / f"{SHEET_NAME}_bland_altman.jpg",
+        save_path=OUT_DIR / "bland_altman" / f"{SHEET_NAME}_bland_altman.jpg",
     )
     print(f"structure: {TITLE}\nstats: {status}")
 
