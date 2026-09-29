@@ -2,6 +2,7 @@
 
 from config import OUT_DIR, PLOT_DATA
 
+from .diagrams import overlap_circles
 from .helpers import bland_altman_plot, grouped_bar_chart, load_excel
 from .registry import register
 
@@ -79,4 +80,18 @@ def run_v_barchart():
         ylim=(0, 180),
         yticks=range(0, 181, 20),
         save_path=OUT_DIR / "barcharts" / "v_barchart.jpg",
+    )
+
+
+@register("circle-diagram", "Overlapping circles: V_SECT, V_VM and their intersection")
+def run_circles_diagram():
+    overlap_circles(
+        legend_labels=[
+            r"V$_{\mathrm{SECT}}$",
+            r"V$_{\mathrm{VM}}$",
+            r"V$_{\mathrm{intersection}}$",
+            r"F$_{\mathrm{SECT}}$",
+            r"F$_{\mathrm{VM}}$",
+        ],
+        save_path=OUT_DIR / "diagrams" / "overlapping_circles_2.jpg",
     )
