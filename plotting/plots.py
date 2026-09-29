@@ -9,7 +9,8 @@ from .registry import register
 
 @register("bland-altman", "Bland-Altman plot of SECT vs VNC")
 def run_bland_altman():
-    SHEET_NAME = "buccal_fat"  # TODO: change file name
+    # TODO: configs specific about the chart
+    SHEET_NAME = "buccal_fat"
     COLUMN_A = "SECT"
     COLUMN_B = "VNC"
     TITLE = SHEET_NAME.replace("_", " ").title()
@@ -44,13 +45,13 @@ def run_f_barchart():
         df,
         value_cols=[COLUMN_A, COLUMN_B],
         labels=[
-            r"V$_{\mathrm{SECT}}$",
-            r"V$_{\mathrm{VM}}$",
+            r"F$_{\mathrm{SECT}}$",
+            r"F$_{\mathrm{VM}}$",
         ],
         colors=["tab:blue", "tab:orange"],
         title="",
         xlabel="Patient No",
-        ylabel="GTV Non-overlap Fraction(%)",
+        ylabel="GTV Non-overlap Fraction (%)",
         save_path=OUT_DIR / "barcharts" / "f_barchart.jpg",
     )
 
@@ -63,10 +64,10 @@ def run_v_barchart():
     COLUMN_B = "VVM"
     COLUMN_C = "Vintersection"
 
-    plot_data = load_excel(PLOT_DATA, sheet_name=SHEET_NAME)
+    df = load_excel(PLOT_DATA, sheet_name=SHEET_NAME)
 
     grouped_bar_chart(
-        plot_data,
+        df,
         value_cols=[COLUMN_A, COLUMN_B, COLUMN_C],
         labels=[
             r"V$_{\mathrm{SECT}}$",
