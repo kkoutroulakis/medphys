@@ -1,11 +1,12 @@
 """Reusable plotting helpers: load data from Excel, draw plots"""
 
-from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+from .statistics import bland_altman_stats
 
 # ---------------------------------------
 # Global style for plots
@@ -28,42 +29,6 @@ def load_excel(path, sheet_name=0, skiprows=0, usecols=None, nrows=None):
 # ---------------------------------------
 # Bland-Altman
 # ---------------------------------------
-@dataclass
-class BlandAltmanStats:
-    bias: float
-    sd: float
-    lower_loa: float
-    upper_loa: float
-    n: int
-
-    def __str__(self):
-        return (
-            f"n = {self.n}\n"
-            f"Mean difference (bias): {self.bias:.3f}\n"
-            f"SD of MD: {self.sd:.3f}\n"
-            f"Limits of agreement: {self.lower_loa:.3f} to {self.upper_loa:.3f}\n"
-        )
-
-
-def bland_altam_stats(a, b):
-    """
-    Compute bias and 95% limits of agreement for a - b.
-    """
-
-    data = pd.DataFrame({"a": a, "b": b}).dropna()
-    diff = data["a"] - data["b"]  # x-axis: difference between methods
-    bias = diff.mean()
-    sd = diff.std(ddof=1)  # standard deviation of the differences
-
-    return BlandAltmanStats(
-        bias=bias,
-        sd=sd,
-        lower_loa=bias - 1.96 * sd,
-        upper_loa=bias + 1.96 * sd,
-        n=len(diff),
-    )
-
-
 def bland_altman_plot(
     a,
     b,
@@ -85,16 +50,17 @@ def bland_altman_plot(
     """
 
     data = pd.DataFrame({"a": a, "b": b}).dropna()
+
     mean = (data["a"] + data["b"]) / 2
     diff = data["a"] - data["b"]
-    stats = bland_altam_stats(data["a"], data["b"])
+
+    stats = bland_altman_stats(data["a"], data["b"])
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 6))
     else:
         fig = ax.figure
 
-    # ax.scatter(mean, diff, alpha=0.7, edgecolor="k")
     ax.scatter(mean, diff, color="red", marker="s")
     ax.axhline(
         stats.bias, color="black", linestyle="-", label=f"Mean diff = {stats.bias:.2f}"
@@ -111,8 +77,6 @@ def bland_altman_plot(
         linestyle=":",
         label=f"-1.96 SD = {stats.lower_loa:.2f}",
     )
-    # ax.axhline(0, color="grey", linewidth="0.8")
-    # ax.legend()
 
     _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks)
     _save(fig, save_path)
