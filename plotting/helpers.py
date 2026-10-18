@@ -178,44 +178,44 @@ def grouped_bar_chart(
 # ---------------------------------------------------------------------------
 # Internal helpers (shared styling and saving)
 # ---------------------------------------------------------------------------
-def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks):
+def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks, xrotation=0):
+    # Title
     if title is not None:
-        ax.set_title(title)
+        ax.set_title(title, fontsize=14, fontweight="bold")
 
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    # Axis labels
+    ax.set_xlabel(xlabel, fontsize=14, fontweight="bold")
+    ax.set_ylabel(ylabel, fontsize=14, fontweight="bold")
 
+    # Axis limits
     if xlim is not None:
         ax.set_xlim(xlim)
     if ylim is not None:
         ax.set_ylim(ylim)
+
+    # Axis ticks
     if xticks is not None:
         ax.set_xticks(xticks)
     if yticks is not None:
         ax.set_yticks(yticks)
-    # ax.grid(alpha=0.3)
+
+    # Rotate x-axis tick label when needed
+    ax.tick_params(axis="x", labelrotation=xrotation)
+
+    # Bold tick labels and set their font size
+    ax.tick_params(axis="both", width=2, length=6, labelsize=14)
+    plt.setp(ax.get_xticklabels() + ax.get_yticklabels(), fontweight="bold")
 
     # Show only left and bottom axis lines
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    # Bold title and axis labels
-    ax.title.set_fontweight("bold")
-    ax.xaxis.label.set_fontweight("bold")
-    ax.yaxis.label.set_fontweight("bold")
-
-    # Enlarge font size on x,y axis
-    ax.tick_params(width=2, length=6, labelsize=16)
-    ax.set_xlabel(xlabel, fontsize=16)
-    ax.set_ylabel(ylabel, fontsize=16)
-
-    # Bold tick values
-    plt.setp(ax.get_xticklabels() + ax.get_yticklabels(), fontweight="bold")
-
     # Thicker axis lines and tick marks
     ax.spines["left"].set_linewidth(2)
     ax.spines["bottom"].set_linewidth(2)
-    ax.tick_params(width=2, length=6)
+
+    # Optional grid
+    # ax.grid(alpha=0.3)
 
 
 def _save(fig, save_path):
