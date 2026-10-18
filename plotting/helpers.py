@@ -218,10 +218,19 @@ def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks, xrotation
     # ax.grid(alpha=0.3)
 
 
-def _save(fig, save_path):
-    if save_path is not None:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.tight_layout()
-        # fig.savefig(save_path, dpi=300) # TODO: for .png
-        fig.savefig(save_path, dpi=300, pil_kwargs={"quality": 95})
+def _save(fig, save_path, dpi=300, quality=95, bbox_inches="tight"):
+    if save_path is None:
+        return
+
+    save_path = Path(save_path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fig.tight_layout()
+
+    save_kwargs = {"dpi": dpi, "bbox_inches": bbox_inches}
+
+    # JPEG specific options
+    if save_path.suffix.lower() in {".jpg", ".jpeg"}:
+        save_kwargs["pil_kwargs"] = {"quality": quality}
+
+    fig.savefig(save_path, **save_kwargs)
