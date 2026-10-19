@@ -1,10 +1,12 @@
-"""Schemantic figures that don't plot data."""
+"""Schematic figures that don't plot data."""
 
 from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
 from matplotlib.legend_handler import HandlerBase
 from matplotlib.patches import Circle
+
+from config import OVERLAP_CIRCLE_COLORS
 
 from .helpers import _save
 
@@ -70,8 +72,7 @@ class RegionHandler(HandlerBase):
 def overlap_circles(
     radius=1.0,
     distance=None,
-    # colors=("tab:blue", "tab:orange", "tab:green", "#aec7e8", "#ffbb78"),
-    colors=("tab:blue", "tab:orange", "tab:green", "#33a8de", "#faa805"),
+    colors=OVERLAP_CIRCLE_COLORS,
     labels=None,
     label_fontsize=14,
     legend_labels=None,
@@ -84,13 +85,25 @@ def overlap_circles(
     """
     Draw two equal circles side by side with a colored overlap.
 
-    `distance` is the distance between the centers (defaults to `radius`).
-    `colors` are (left, right, overlap).
-    `labels` are optional text inside the regions: (left, right, overlap).
-    `legend_labels` are optional legend entries, in this order:
-        (left circle, right circle, overlap, left part only, right part only).
-    Returns (fig, ax).
+    Parameters
+    ----------
+    radius: float
+        Radius of both circles.
+    distance: float
+        Distance between circle centers. Defaults to radius.
+    colors: tuple
+        Colors in the order (left, right, overlap, left_only, right_only).
+    labels: tuple, optional
+        Text labels for left, right and overlap regions.
+    legend_labels: tuple, optional
+        Legend labels in the order (left, right, overlap, left_only, right_only).
+
+    Returns
+    -------
+    fig, ax
+        Matplotlib figure and axes.
     """
+
     distance = radius if distance is None else distance
     left = (-distance / 2, 0)
     right = (distance / 2, 0)
@@ -123,7 +136,7 @@ def overlap_circles(
 
     # Optional labels inside the regions
     if labels is not None:
-        for x, text in zip((-radius, radius, 0), labels):
+        for x, text in zip((left[0], right[0], 0), labels):
             ax.text(
                 x,
                 0,
