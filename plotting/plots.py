@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from config import OUT_DIR, PLOT_DATA
+from config import BAR_CHART_COLORS, BAR_CHART_DATA, BLAND_ALTMAN_DATA, OUT_DIR
 
 from .diagrams import overlap_circles
 from .helpers import bland_altman_plot, grouped_bar_chart, load_excel
@@ -11,12 +11,12 @@ from .registry import register
 
 @register("bland-altman", "Bland-Altman plot for method comparison")
 def run_bland_altman():
-    sheet_name = "tumor"
-    value_cols = ["VMAT_REF", "VMAT_SW0.5cm"]
+    sheet_name = "mandible"
+    value_cols = ["SECT", "VNC"]
     structure = sheet_name.replace("_", " ").title()
 
     plot_data = load_excel(
-        PLOT_DATA,
+        BLAND_ALTMAN_DATA,
         sheet_name=sheet_name,
         usecols=value_cols,
     )
@@ -26,7 +26,7 @@ def run_bland_altman():
         plot_data[value_cols[1]],
         xlabel="HU Average",
         ylabel=f"{structure}: HU Difference",
-        save_path=OUT_DIR / "bland_altman" / f"{sheet_name}_bland_altman.jpg",
+        save_path=OUT_DIR / "bland_altman" / f"{sheet_name}.jpg",
     )
     print(f"structure: {structure}\nstats: {status}")
 
@@ -36,19 +36,19 @@ def run_d_barchart():
     sheet_name = "double_bar_chart"
     value_cols = ["<10 HU", "<15 HU"]
 
-    df = load_excel(PLOT_DATA, sheet_name=sheet_name)
+    df = load_excel(BAR_CHART_DATA, sheet_name=sheet_name)
 
     grouped_bar_chart(
         df,
         value_cols=value_cols,
         labels=value_cols,
-        colors=["tab:blue", "tab:orange"],
+        colors=BAR_CHART_COLORS[: len(value_cols)],
         title="",
         xlabel="",
         ylabel="",
         ylim=(-2, 2),
         yticks=np.arange(-2, 2, 0.5),
-        save_path=OUT_DIR / "barcharts" / "hu_diff_barchart.jpg",
+        save_path=OUT_DIR / "barcharts" / "hu_diff.jpg",
     )
 
 
@@ -57,7 +57,7 @@ def run_t_barchart():
     sheet_name = "tripple_bar_chart"
     value_cols = ["VSECT", "VVM", "Vintersection"]
 
-    df = load_excel(PLOT_DATA, sheet_name=sheet_name)
+    df = load_excel(BAR_CHART_DATA, sheet_name=sheet_name)
 
     grouped_bar_chart(
         df,
@@ -67,13 +67,13 @@ def run_t_barchart():
             r"V$_{\mathrm{VM}}$",
             r"V$_{\mathrm{intersection}}$",
         ],
-        colors=["tab:blue", "tab:orange", "tab:green"],
+        colors=BAR_CHART_COLORS[: len(value_cols)],
         title="",
         xlabel="Patient No",
         ylabel=r"GTV Volume (cm$^{3}$)",
         ylim=(0, 180),
         yticks=np.arange(0, 181, 20),
-        save_path=OUT_DIR / "barcharts" / "v_barchart.jpg",
+        save_path=OUT_DIR / "barcharts" / "tripple_barchart.jpg",
     )
 
 
