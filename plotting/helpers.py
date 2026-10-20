@@ -79,6 +79,7 @@ def bland_altman_plot(
         linestyle=":",
         label=f"-1.96 SD = {stats.lower_loa:.2f}",
     )
+    ax.legend(fontsize=AXIS_STYLES["legend"])
 
     _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks)
     _save(fig, save_path)
@@ -148,15 +149,17 @@ def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks, xrotation
     # Title
     if title is not None:
         ax.set_title(
-            title, fontsize=AXIS_STYLES.fontsize, fontweight=AXIS_STYLES.fontweight
+            title,
+            fontsize=AXIS_STYLES["fontsize"],
+            fontweight=AXIS_STYLES["fontweight"],
         )
 
     # Axis labels
     ax.set_xlabel(
-        xlabel, fontsize=AXIS_STYLES.fontsize, fontweight=AXIS_STYLES.fontweight
+        xlabel, fontsize=AXIS_STYLES["fontsize"], fontweight=AXIS_STYLES["fontweight"]
     )
     ax.set_ylabel(
-        ylabel, fontsize=AXIS_STYLES.fontsize, fontweight=AXIS_STYLES.fontweight
+        ylabel, fontsize=AXIS_STYLES["fontsize"], fontweight=AXIS_STYLES["fontweight"]
     )
 
     # Axis limits
@@ -177,12 +180,13 @@ def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks, xrotation
     # Bold tick labels and set their font size
     ax.tick_params(
         axis="both",
-        width=AXIS_STYLES.tick_width,
-        length=AXIS_STYLES.tick_length,
-        labelsize=AXIS_STYLES.fontsize,
+        width=AXIS_STYLES["tick_width"],
+        length=AXIS_STYLES["tick_length"],
+        labelsize=AXIS_STYLES["fontsize"],
     )
     plt.setp(
-        ax.get_xticklabels() + ax.get_yticklabels(), fontweight=AXIS_STYLES.fontweight
+        ax.get_xticklabels() + ax.get_yticklabels(),
+        fontweight=AXIS_STYLES["fontweight"],
     )
 
     # Show only left and bottom axis lines
@@ -190,8 +194,8 @@ def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks, xrotation
     ax.spines["right"].set_visible(False)
 
     # Thicker axis lines and tick marks
-    ax.spines["left"].set_linewidth(AXIS_STYLES.spine_linewidth)
-    ax.spines["bottom"].set_linewidth(AXIS_STYLES.spine_linewidth)
+    ax.spines["left"].set_linewidth(AXIS_STYLES["spine_linewidth"])
+    ax.spines["bottom"].set_linewidth(AXIS_STYLES["spine_linewidth"])
 
     # Optional grid
     # ax.grid(alpha=0.3)
