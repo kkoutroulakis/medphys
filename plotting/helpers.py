@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from config import AXIS_STYLES
+
 from .statistics import bland_altman_stats
 
 # ---------------------------------------
@@ -131,7 +133,7 @@ def grouped_bar_chart(
     ax.set_xticklabels(categories)
     ax.set_xlim(-0.6, len(df) - 0.4)
     ax.grid(axis="x", visible=False)
-    ax.legend(fontsize=12)
+    ax.legend(fontsize=AXIS_STYLES.legend)
 
     _style_axes(ax, title, xlabel, ylabel, None, ylim, None, yticks)
     _save(fig, save_path)
@@ -145,11 +147,17 @@ def grouped_bar_chart(
 def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks, xrotation=0):
     # Title
     if title is not None:
-        ax.set_title(title, fontsize=14, fontweight="bold")
+        ax.set_title(
+            title, fontsize=AXIS_STYLES.fontsize, fontweight=AXIS_STYLES.fontweight
+        )
 
     # Axis labels
-    ax.set_xlabel(xlabel, fontsize=14, fontweight="bold")
-    ax.set_ylabel(ylabel, fontsize=14, fontweight="bold")
+    ax.set_xlabel(
+        xlabel, fontsize=AXIS_STYLES.fontsize, fontweight=AXIS_STYLES.fontweight
+    )
+    ax.set_ylabel(
+        ylabel, fontsize=AXIS_STYLES.fontsize, fontweight=AXIS_STYLES.fontweight
+    )
 
     # Axis limits
     if xlim is not None:
@@ -167,16 +175,23 @@ def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks, xrotation
     ax.tick_params(axis="x", labelrotation=xrotation)
 
     # Bold tick labels and set their font size
-    ax.tick_params(axis="both", width=2, length=6, labelsize=14)
-    plt.setp(ax.get_xticklabels() + ax.get_yticklabels(), fontweight="bold")
+    ax.tick_params(
+        axis="both",
+        width=AXIS_STYLES.tick_width,
+        length=AXIS_STYLES.tick_length,
+        labelsize=AXIS_STYLES.fontsize,
+    )
+    plt.setp(
+        ax.get_xticklabels() + ax.get_yticklabels(), fontweight=AXIS_STYLES.fontweight
+    )
 
     # Show only left and bottom axis lines
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
     # Thicker axis lines and tick marks
-    ax.spines["left"].set_linewidth(2)
-    ax.spines["bottom"].set_linewidth(2)
+    ax.spines["left"].set_linewidth(AXIS_STYLES.spine_linewidth)
+    ax.spines["bottom"].set_linewidth(AXIS_STYLES.spine_linewidth)
 
     # Optional grid
     # ax.grid(alpha=0.3)

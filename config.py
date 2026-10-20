@@ -14,6 +14,21 @@ OUT_DIR = PROJECT_DIR / "figures"
 BLAND_ALTMAN_DATA = DATA_DIR / "bland_altman_data.xlsx"
 BAR_CHART_DATA = DATA_DIR / "bar_charts_data.xlsx"
 
+# ---------------------------------------------------------------------------
+# Typography
+# ---------------------------------------------------------------------------
+
+AXIS_STYLES = {
+    "fontsize": 14,
+    "fontweight": "bold",
+    "tick_fontsize": 14,
+    "tick_width": 2,
+    "tick_length": 6,
+    "spine_linewidth": 2,
+    "hide_top_spine": True,
+    "hide_right_spine": True,
+    "legend": 12,
+}
 
 # ---------------------------------------------------------------------------
 # Colors
