@@ -2,7 +2,14 @@
 
 import numpy as np
 
-from config import BAR_CHART_COLORS, BAR_CHART_DATA, BLAND_ALTMAN_DATA, OUT_DIR
+from config import (
+    BAR_CHART_DATA,
+    BLAND_ALTMAN_CONFS,
+    BLAND_ALTMAN_DATA,
+    DOUBLE_BAR_CHART_COLORS,
+    OUT_DIR,
+    TRIPLE_BAR_CHART_COLORS,
+)
 
 from .diagrams import overlap_circles
 from .helpers import bland_altman_plot, grouped_bar_chart, load_excel
@@ -11,8 +18,8 @@ from .registry import register
 
 @register("bland-altman", "Bland-Altman plot for method comparison")
 def run_bland_altman():
-    sheet_name = "mandible"
-    value_cols = ["SECT", "VNC"]
+    sheet_name = BLAND_ALTMAN_CONFS["sheet_name"]
+    value_cols = BLAND_ALTMAN_CONFS["value_cols"]
     structure = sheet_name.replace("_", " ").title()
 
     plot_data = load_excel(
@@ -24,8 +31,13 @@ def run_bland_altman():
     _, _, status = bland_altman_plot(
         plot_data[value_cols[0]],
         plot_data[value_cols[1]],
-        xlabel="HU Average",
-        ylabel=f"{structure}: HU Difference",
+        title=BLAND_ALTMAN_CONFS["title"],
+        xlabel=BLAND_ALTMAN_CONFS["xlabel"],
+        ylabel=BLAND_ALTMAN_CONFS["ylabel"],
+        xlim=(38, 58),
+        xticks=np.arange(38, 59, 4),
+        ylim=(-4, 6),
+        yticks=np.arange(-4, 6.5, 2),
         save_path=OUT_DIR / "bland_altman" / f"{sheet_name}.jpg",
     )
     print(f"structure: {structure}\nstats: {status}")
@@ -33,8 +45,8 @@ def run_bland_altman():
 
 @register("double-barchart", "Grouped bar chart with two data series")
 def run_d_barchart():
-    sheet_name = "double_bar_chart"
-    value_cols = ["<10 HU", "<15 HU"]
+    sheet_name = "double_bar_tumor"
+    value_cols = ["SECT", "VM"]
 
     df = load_excel(BAR_CHART_DATA, sheet_name=sheet_name)
 
@@ -42,13 +54,13 @@ def run_d_barchart():
         df,
         value_cols=value_cols,
         labels=value_cols,
-        colors=BAR_CHART_COLORS[: len(value_cols)],
+        colors=DOUBLE_BAR_CHART_COLORS,
         title="",
-        xlabel="",
-        ylabel="",
-        ylim=(-2, 2),
-        yticks=np.arange(-2, 2, 0.5),
-        save_path=OUT_DIR / "barcharts" / "hu_diff.jpg",
+        xlabel="Αριθμός ασθενών",
+        ylabel="Όγκος GTV (cm$^{3}$)",
+        # ylim=(-2, 2),
+        # yticks=np.arange(-2, 2, 0.5),
+        save_path=OUT_DIR / "barcharts" / "tumor.jpg",
     )
 
 
@@ -67,7 +79,7 @@ def run_t_barchart():
             r"V$_{\mathrm{VM}}$",
             r"V$_{\mathrm{intersection}}$",
         ],
-        colors=BAR_CHART_COLORS[: len(value_cols)],
+        colors=TRIPLE_BAR_CHART_COLORS[: len(value_cols)],
         title="",
         xlabel="Patient No",
         ylabel=r"GTV Volume (cm$^{3}$)",

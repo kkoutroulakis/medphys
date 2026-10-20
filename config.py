@@ -62,3 +62,20 @@ OVERLAP_CIRCLE_COLORS = (
     COLORS["skyblue"],
     COLORS["dark-orange"],
 )
+
+# ---------------------------------------------------------------------------
+# Plots
+# ---------------------------------------------------------------------------
+
+BLAND_ALTMAN_CONFS = {
+    "sheet_name": "brain_stem",
+    "value_cols": ["VMAT_REF", "VMAT_Arc1"],
+    "title": r"VMAT$_{\mathbf{Ref}}$ - VMAT$_{\mathbf{Arc1}}$",
+    "xlabel": r"Μέσος όρος D$_{\mathbf{max}}$ (Gy)",
+    "ylabel": r"Εγκεφαλικό στέλεχος: Διαφορά D$_{\mathbf{max}}$ (Gy)",
+    "xlim": None,
+    "ylim": None,
+    "xticks": None,
+    "yticks": None,
+    "show_loa_labels": True,
+}

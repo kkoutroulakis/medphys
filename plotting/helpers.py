@@ -64,7 +64,7 @@ def bland_altman_plot(
     else:
         fig = ax.figure
 
-    ax.scatter(mean, diff, color=COLORS["ba_red"], marker="s")
+    ax.scatter(mean, diff, color=COLORS["red"], marker="s")
 
     ax.axhline(stats.bias, color=COLORS["black"], linestyle="-")
     ax.axhline(stats.upper_loa, color=COLORS["black"], linestyle=":")
