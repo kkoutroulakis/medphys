@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from config import AXIS_STYLES
+from config import AXIS_STYLES, COLORS
 
 from .statistics import bland_altman_stats
 
@@ -41,6 +41,7 @@ def bland_altman_plot(
     ylim=None,
     xticks=None,
     yticks=None,
+    show_loa_labels=True,
     ax=None,
     save_path=None,
 ):
@@ -63,23 +64,28 @@ def bland_altman_plot(
     else:
         fig = ax.figure
 
-    ax.scatter(mean, diff, color="red", marker="s")
-    ax.axhline(
-        stats.bias, color="black", linestyle="-", label=f"Mean diff = {stats.bias:.2f}"
-    )
-    ax.axhline(
-        stats.upper_loa,
-        color="black",
-        linestyle=":",
-        label=f"+1.96 SD = {stats.upper_loa:.2f}",
-    )
-    ax.axhline(
-        stats.lower_loa,
-        color="black",
-        linestyle=":",
-        label=f"-1.96 SD = {stats.lower_loa:.2f}",
-    )
-    ax.legend(fontsize=AXIS_STYLES["legend"])
+    ax.scatter(mean, diff, color=COLORS["ba_red"], marker="s")
+
+    ax.axhline(stats.bias, color=COLORS["black"], linestyle="-")
+    ax.axhline(stats.upper_loa, color=COLORS["black"], linestyle=":")
+    ax.axhline(stats.lower_loa, color=COLORS["black"], linestyle=":")
+
+    if show_loa_labels:
+        for value, label in [
+            (stats.upper_loa, f"+1.96 SD\n{stats.upper_loa:.2f}"),
+            (stats.bias, f"Mean\n{stats.bias:.2f}"),
+            (stats.lower_loa, f"-1.96 SD\n{stats.lower_loa:.2f}"),
+        ]:
+            ax.text(
+                1.00,
+                value,
+                label,
+                transform=ax.get_yaxis_transform(),
+                ha="right",
+                va="center_baseline",
+                fontsize=AXIS_STYLES["tick_fontsize"],
+                clip_on=False,
+            )
 
     _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks)
     _save(fig, save_path)
@@ -134,7 +140,7 @@ def grouped_bar_chart(
     ax.set_xticklabels(categories)
     ax.set_xlim(-0.6, len(df) - 0.4)
     ax.grid(axis="x", visible=False)
-    ax.legend(fontsize=AXIS_STYLES.legend)
+    ax.legend(fontsize=AXIS_STYLES["legend"])
 
     _style_axes(ax, title, xlabel, ylabel, None, ylim, None, yticks)
     _save(fig, save_path)

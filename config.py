@@ -39,19 +39,26 @@ COLORS = {
     "blue": "tab:blue",
     "orange": "tab:orange",
     "green": "tab:green",
-    "red": "tab:red",
+    "tomato": "tab:red",
     "purple": "tab:purple",
     "gray": "tab:grey",
+    "red": "red",
+    "black": "black",
+    "darkred": "#910000",
+    "lightgrey": "#b8b8b8",
+    "skyblue": "#33a8de",
+    "dark-orange": "#faa805",
 }
 
 # Grouped bar chart colors
-BAR_CHART_COLORS = [COLORS["blue"], COLORS["orange"], COLORS["green"]]
+DOUBLE_BAR_CHART_COLORS = [COLORS["lightgrey"], COLORS["darkred"]]
+TRIPLE_BAR_CHART_COLORS = [COLORS["blue"], COLORS["orange"], COLORS["green"]]
 
 # Overlapping-circles diagram colors
 OVERLAP_CIRCLE_COLORS = (
     COLORS["blue"],
     COLORS["orange"],
     COLORS["green"],
-    "#33a8de",
-    "#faa805",
+    COLORS["skyblue"],
+    COLORS["dark-orange"],
 )
