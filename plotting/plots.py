@@ -6,7 +6,7 @@ from config import (
     BAR_CHART_DATA,
     BLAND_ALTMAN_CONFS,
     BLAND_ALTMAN_DATA,
-    DOUBLE_BAR_CHART_COLORS,
+    DOUBLE_BAR_CHART_CONFS,
     OUT_DIR,
     TRIPLE_BAR_CHART_COLORS,
 )
@@ -45,22 +45,19 @@ def run_bland_altman():
 
 @register("double-barchart", "Grouped bar chart with two data series")
 def run_d_barchart():
-    sheet_name = "double_bar_tumor"
-    value_cols = ["SECT", "VM"]
-
-    df = load_excel(BAR_CHART_DATA, sheet_name=sheet_name)
+    df = load_excel(BAR_CHART_DATA, sheet_name=DOUBLE_BAR_CHART_CONFS["sheet_name"])
 
     grouped_bar_chart(
         df,
-        value_cols=value_cols,
-        labels=value_cols,
-        colors=DOUBLE_BAR_CHART_COLORS,
-        title="",
-        xlabel="Αριθμός ασθενών",
-        ylabel="Όγκος GTV (cm$^{3}$)",
-        # ylim=(-2, 2),
-        # yticks=np.arange(-2, 2, 0.5),
-        save_path=OUT_DIR / "barcharts" / "tumor.jpg",
+        value_cols=DOUBLE_BAR_CHART_CONFS["value_cols"],
+        labels=DOUBLE_BAR_CHART_CONFS["legends"],
+        colors=DOUBLE_BAR_CHART_CONFS["colors"],
+        title=DOUBLE_BAR_CHART_CONFS["title"],
+        xlabel=DOUBLE_BAR_CHART_CONFS["xlabel"],
+        ylabel=DOUBLE_BAR_CHART_CONFS["ylabel"],
+        ylim=(0, 60),
+        yticks=np.arange(0, 65, 10),
+        save_path=OUT_DIR / "barcharts" / DOUBLE_BAR_CHART_CONFS["file_name"],
     )
 
 
@@ -95,7 +92,7 @@ def run_circles_diagram():
         legend_labels=[
             r"V$_{\mathrm{SECT}}$",
             r"V$_{\mathrm{VM}}$",
-            r"V$_{\mathrm{intersection}}$",
+            r"V$_{\mathrm{INT}}$",
             r"F$_{\mathrm{SECT}}$",
             r"F$_{\mathrm{VM}}$",
         ],

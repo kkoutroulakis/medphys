@@ -51,7 +51,6 @@ COLORS = {
 }
 
 # Grouped bar chart colors
-DOUBLE_BAR_CHART_COLORS = [COLORS["lightgrey"], COLORS["darkred"]]
 TRIPLE_BAR_CHART_COLORS = [COLORS["blue"], COLORS["orange"], COLORS["green"]]
 
 # Overlapping-circles diagram colors
@@ -78,4 +77,18 @@ BLAND_ALTMAN_CONFS = {
     "xticks": None,
     "yticks": None,
     "show_loa_labels": True,
+}
+
+DOUBLE_BAR_CHART_CONFS = {
+    "sheet_name": "f_plot",
+    "value_cols": ["FSECT", "FVM"],
+    "legends": [
+        r"F$_{\mathbf{SECT}}$",
+        r"F$_{\mathbf{VM}}$",
+    ],
+    "colors": [COLORS["blue"], COLORS["orange"]],
+    "title": None,
+    "xlabel": "Patient No",
+    "ylabel": r"GTV Non-overlap Fraction (%)",
+    "file_name": "fsect_fvm.jpg",
 }

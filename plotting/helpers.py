@@ -140,7 +140,10 @@ def grouped_bar_chart(
     ax.set_xticklabels(categories)
     ax.set_xlim(-0.6, len(df) - 0.4)
     ax.grid(axis="x", visible=False)
-    ax.legend(fontsize=AXIS_STYLES["legend"])
+    ax.legend(
+        prop={"size": AXIS_STYLES["legend"], "weight": AXIS_STYLES["fontweight"]},
+        frameon=False,
+    )
 
     _style_axes(ax, title, xlabel, ylabel, None, ylim, None, yticks)
     _save(fig, save_path)
