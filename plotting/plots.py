@@ -11,7 +11,7 @@ from config import (
     TRIPLE_BAR_CHART_COLORS,
 )
 
-from .diagrams import overlap_circles
+from .diagrams import LEGEND_STYLES, overlap_circles
 from .helpers import bland_altman_plot, grouped_bar_chart, load_excel
 from .registry import register
 
@@ -86,8 +86,8 @@ def run_t_barchart():
     )
 
 
-@register("circle-diagram", "Overlapping circles: V_SECT, V_VM and their intersection")
-def run_circles_diagram():
+@register("circle-diagram", "Overlapping circles diagram", options=LEGEND_STYLES)
+def run_circles_diagram(legend_style="shape"):
     overlap_circles(
         legend_labels=[
             r"V$_{\mathrm{SECT}}$",
@@ -96,5 +96,6 @@ def run_circles_diagram():
             r"F$_{\mathrm{SECT}}$",
             r"F$_{\mathrm{VM}}$",
         ],
-        save_path=OUT_DIR / "diagrams" / "overlapping_circles.jpg",
+        legend_style=legend_style,
+        save_path=OUT_DIR / "diagrams" / f"overlapping_circles_{legend_style}.jpg",
     )
