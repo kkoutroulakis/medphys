@@ -100,6 +100,7 @@ def grouped_bar_chart(
     df,
     value_cols,
     category_col=None,
+    categories=None,
     labels=None,
     colors=None,
     title=None,
@@ -121,7 +122,16 @@ def grouped_bar_chart(
         fig = ax.figure
 
     labels = labels or value_cols
-    categories = df[category_col] if category_col is not None else range(1, len(df) + 1)
+
+    if categories is not None:
+        if len(categories) != len(df):
+            raise ValueError(f"Got {len(categories)} categories for {len(df)} rows.")
+        tick_labels = categories
+    elif category_col is not None:
+        tick_labels = df[category_col]
+    else:
+        tick_labels = range(1, len(df) + 1)
+
     n_series = len(value_cols)
     x = np.arange(len(df))
     width = bar_width / n_series
@@ -137,7 +147,7 @@ def grouped_bar_chart(
         )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(categories)
+    ax.set_xticklabels(tick_labels)
     ax.set_xlim(-0.6, len(df) - 0.4)
     ax.grid(axis="x", visible=False)
     ax.legend(
@@ -226,3 +236,4 @@ def _save(fig, save_path, dpi=300, quality=95, bbox_inches="tight"):
         save_kwargs["pil_kwargs"] = {"quality": quality}
 
     fig.savefig(save_path, **save_kwargs)
+    plt.close(fig)
