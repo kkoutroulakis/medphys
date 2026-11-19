@@ -28,7 +28,7 @@ def bland_altman_stats(a, b):
     """Compute bias and 95% limits of agreement for a - b."""
 
     data = pd.DataFrame({"a": a, "b": b}).dropna()
-    diff = data["a"] - data["b"]  # x-axis: difference between methods
+    diff = data["a"] - data["b"]  # y-axis: difference between methods
 
     bias = diff.mean()
     sd = diff.std(ddof=1)  # standard deviation of the differences
