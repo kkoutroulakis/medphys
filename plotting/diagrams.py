@@ -2,14 +2,12 @@
 
 from dataclasses import dataclass
 
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.legend_handler import HandlerBase
 from matplotlib.patches import Circle, Polygon
 
-from config import OVERLAP_CIRCLE_COLORS
-
-from .helpers import _save
+from .helpers import _get_axes, _save
+from .style import OVERLAP_CIRCLE_COLORS
 
 # ---------------------------------------------------------------------------
 # Overlapping circles diagram
@@ -19,16 +17,6 @@ from .helpers import _save
 # "context": each region shown in place inside both circle outlines
 LEGEND_STYLES = ("shape", "context")
 
-# Horizontal shift that centers each region's shape in the legend icon
-# so all "shape" icons line up in one column
-_REGION_SHIFT = {
-    "left": 0.5,
-    "right": -0.5,
-    "overlap": 0.0,
-    "left_only": 0.75,
-    "right_only": -0.75,
-}
-
 
 @dataclass(frozen=True)
 class RegionKey:
@@ -36,6 +24,25 @@ class RegionKey:
 
     region: str  # "left", "right", "overlap", "left_only", "right_only"
     color: str
+
+
+def _region_shift(region, spacing):
+    """
+    Horizontal shift, in radii that centers a region's shape in the legend
+    icon, so all "shape" icons line up in one column.
+
+    `spacing` is the distance between circle centers divided by the radius.
+    """
+
+    half = spacing / 2
+    crescent = (half + 1) / 2
+    return {
+        "left": half,
+        "right": -half,
+        "overlap": 0.0,
+        "left_only": crescent,
+        "right_only": -crescent,
+    }[region]
 
 
 def _arc(center, r, start, end, sign, n=100):
@@ -60,14 +67,14 @@ def _crescent(own, other, r):
     )
 
 
-def _lens(left, rigth, r):
+def _lens(left, right, r):
     """Outline of the overlap between two circles."""
 
-    alpha = np.arccos((rigth[0] - left[0]) / (2 * r))
+    alpha = np.arccos((right[0] - left[0]) / (2 * r))
     return np.vstack(
         [
             _arc(left, r, -alpha, alpha, 1),
-            _arc(rigth, r, np.pi - alpha, np.pi + alpha, 1),
+            _arc(right, r, np.pi - alpha, np.pi + alpha, 1),
         ]
     )
 
@@ -75,19 +82,20 @@ def _lens(left, rigth, r):
 class RegionHandler(HandlerBase):
     """Draws a legend icon for one region, in the given legend style."""
 
-    def __init__(self, style="shape", **kwargs):
+    def __init__(self, style="shape", spacing=1.0, **kwargs):
         super().__init__(**kwargs)
         self.style = style
+        self.spacing = spacing
 
     def create_artists(
         self, legend, key, xdescent, ydescent, width, height, fontsize, trans
     ):
         r = height / 2
-        shift = _REGION_SHIFT[key.region] if self.style == "shape" else 0
+        shift = _region_shift(key.region, self.spacing) if self.style == "shape" else 0
         cx = width / 2 - xdescent + shift * r
         cy = height / 2 - ydescent
-        left = (cx - r / 2, cy)
-        right = (cx + r / 2, cy)
+        left = (cx - self.spacing * r / 2, cy)
+        right = (cx + self.spacing * r / 2, cy)
 
         # "shape" borders the region itself; "context" borders the circles
         if self.style == "shape":
@@ -153,7 +161,7 @@ def overlap_circles(
     colors: tuple
         Colors in the order (left, right, overlap, left_only, right_only).
     labels: tuple, optional
-        Text labels for left, right and overlap regions.
+        Text labels for the left-only, right-only and overlap regions.
     legend_labels: tuple, optional
         Legend labels in the order (left, right, overlap, left_only, right_only).
     legend_style: str
@@ -175,10 +183,7 @@ def overlap_circles(
     left = (-distance / 2, 0)
     right = (distance / 2, 0)
 
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(8, 6))
-    else:
-        fig = ax.figure
+    fig, ax, own_fig = _get_axes(ax)
 
     # Filled circles
     ax.add_patch(Circle(left, radius, facecolor=colors[3], edgecolor="none"))
@@ -203,7 +208,8 @@ def overlap_circles(
 
     # Optional labels inside the regions
     if labels is not None:
-        for x, text in zip((left[0], right[0], 0), labels):
+        crescent_mid = (distance / 2 + radius) / 2
+        for x, text in zip((-crescent_mid, crescent_mid, 0), labels, strict=False):
             ax.text(
                 x,
                 0,
@@ -226,13 +232,14 @@ def overlap_circles(
         ax.legend(
             keys,
             legend_labels,
-            handler_map={RegionKey: RegionHandler(style=legend_style)},
-            handlelength=3,
+            handler_map={
+                RegionKey: RegionHandler(style=legend_style, spacing=distance / radius)
+            },
+            handlelength=distance / radius + 2,
             handleheight=2,
             fontsize=legend_fontsize,
             loc="center left",
             bbox_to_anchor=(1.02, 0.5),
-            frameon=False,
         )
 
     # Equal aspect keeps the circles round; hide the axes
@@ -242,5 +249,5 @@ def overlap_circles(
     ax.set_aspect("equal")
     ax.axis("off")
 
-    _save(fig, save_path)
+    _save(fig, save_path, close=own_fig)
     return fig, ax
