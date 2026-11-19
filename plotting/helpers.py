@@ -6,19 +6,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from config import AXIS_STYLES, COLORS
-
 from .statistics import bland_altman_stats
-
-# ---------------------------------------
-# Global style for plots
-# ---------------------------------------
-plt.rcParams["font.family"] = ["Arial", "Times New Roman"]
+from .style import COLORS
 
 
-# ---------------------------------------
+# ---------------------------------------------------------------------------
 # Load excel
-# ---------------------------------------
+# ---------------------------------------------------------------------------
 def load_excel(path, sheet_name=0, skiprows=0, usecols=None, nrows=None):
     """Read table from excel sheet and strip spaces from the heades"""
     data = pd.read_excel(
@@ -28,9 +22,9 @@ def load_excel(path, sheet_name=0, skiprows=0, usecols=None, nrows=None):
     return data
 
 
-# ---------------------------------------
+# ---------------------------------------------------------------------------
 # Bland-Altman
-# ---------------------------------------
+# ---------------------------------------------------------------------------
 def bland_altman_plot(
     a,
     b,
@@ -59,10 +53,7 @@ def bland_altman_plot(
 
     stats = bland_altman_stats(data["a"], data["b"])
 
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(8, 6))
-    else:
-        fig = ax.figure
+    fig, ax, own_fig = _get_axes(ax)
 
     ax.scatter(mean, diff, color=COLORS["red"], marker="s")
 
@@ -83,12 +74,12 @@ def bland_altman_plot(
                 transform=ax.get_yaxis_transform(),
                 ha="right",
                 va="center_baseline",
-                fontsize=AXIS_STYLES["tick_fontsize"],
+                fontsize=plt.rcParams["ytick.labelsize"],
                 clip_on=False,
             )
 
     _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks)
-    _save(fig, save_path)
+    _save(fig, save_path, close=own_fig)
 
     return fig, ax, stats
 
@@ -116,10 +107,7 @@ def grouped_bar_chart(
     Draw one group of bars per row, with one bar per column in 'value_cols'
     """
 
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(8, 6))
-    else:
-        fig = ax.figure
+    fig, ax, own_fig = _get_axes(ax)
 
     labels = labels or value_cols
 
@@ -136,7 +124,7 @@ def grouped_bar_chart(
     x = np.arange(len(df))
     width = bar_width / n_series
 
-    for i, (col, label) in enumerate(zip(value_cols, labels)):
+    for i, (col, label) in enumerate(zip(value_cols, labels, strict=True)):
         offset = (i - (n_series - 1) / 2) * width
         ax.bar(
             x + offset,
@@ -150,13 +138,10 @@ def grouped_bar_chart(
     ax.set_xticklabels(tick_labels)
     ax.set_xlim(-0.6, len(df) - 0.4)
     ax.grid(axis="x", visible=False)
-    ax.legend(
-        prop={"size": AXIS_STYLES["legend"], "weight": AXIS_STYLES["fontweight"]},
-        frameon=False,
-    )
+    ax.legend(prop={"weight": "bold"})
 
     _style_axes(ax, title, xlabel, ylabel, None, ylim, None, yticks)
-    _save(fig, save_path)
+    _save(fig, save_path, close=own_fig)
 
     return fig, ax
 
@@ -164,22 +149,23 @@ def grouped_bar_chart(
 # ---------------------------------------------------------------------------
 # Internal helpers (shared styling and saving)
 # ---------------------------------------------------------------------------
-def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks, xrotation=0):
-    # Title
-    if title is not None:
-        ax.set_title(
-            title,
-            fontsize=AXIS_STYLES["fontsize"],
-            fontweight=AXIS_STYLES["fontweight"],
-        )
+def _get_axes(ax):
+    """Return (fig, ax, own_fig); own_fig is True when a new figure was made."""
 
-    # Axis labels
-    ax.set_xlabel(
-        xlabel, fontsize=AXIS_STYLES["fontsize"], fontweight=AXIS_STYLES["fontweight"]
-    )
-    ax.set_ylabel(
-        ylabel, fontsize=AXIS_STYLES["fontsize"], fontweight=AXIS_STYLES["fontweight"]
-    )
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 6))
+        return fig, ax, True
+    return ax.figure, ax, False
+
+
+def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks, xrotation=0):
+    """Per-figure text, limits, and ticks; the general look comes from style.py"""
+
+    if title is not None:
+        ax.set_title(title)
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
 
     # Axis limits
     if xlim is not None:
@@ -196,31 +182,18 @@ def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks, xrotation
     # Rotate x-axis tick label when needed
     ax.tick_params(axis="x", labelrotation=xrotation)
 
-    # Bold tick labels and set their font size
-    ax.tick_params(
-        axis="both",
-        width=AXIS_STYLES["tick_width"],
-        length=AXIS_STYLES["tick_length"],
-        labelsize=AXIS_STYLES["fontsize"],
-    )
     plt.setp(
         ax.get_xticklabels() + ax.get_yticklabels(),
-        fontweight=AXIS_STYLES["fontweight"],
+        fontweight="bold",
     )
 
-    # Show only left and bottom axis lines
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
 
-    # Thicker axis lines and tick marks
-    ax.spines["left"].set_linewidth(AXIS_STYLES["spine_linewidth"])
-    ax.spines["bottom"].set_linewidth(AXIS_STYLES["spine_linewidth"])
+def _save(fig, save_path, close=True, dpi=300, quality=95, bbox_inches="tight"):
+    """
+    Save the figure if 'save_path is given'.
 
-    # Optional grid
-    # ax.grid(alpha=0.3)
-
-
-def _save(fig, save_path, dpi=300, quality=95, bbox_inches="tight"):
+    The figure is closed afterwards only when 'close' is True
+    """
     if save_path is None:
         return
 
@@ -236,4 +209,6 @@ def _save(fig, save_path, dpi=300, quality=95, bbox_inches="tight"):
         save_kwargs["pil_kwargs"] = {"quality": quality}
 
     fig.savefig(save_path, **save_kwargs)
-    plt.close(fig)
+
+    if close:
+        plt.close(fig)
