@@ -1,17 +1,35 @@
-"""Schemantic figures that don't plot data."""
+"""Schematic figures that don't plot data."""
 
 from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.legend_handler import HandlerBase
-from matplotlib.patches import Circle
+from matplotlib.patches import Circle, Polygon
+
+from config import OVERLAP_CIRCLE_COLORS
 
 from .helpers import _save
-
 
 # ---------------------------------------------------------------------------
 # Overlapping circles diagram
 # ---------------------------------------------------------------------------
+# Legend styles
+# "shape": each region drawn on its own, centered, with its own border
+# "context": each region shown in place inside both circle outlines
+LEGEND_STYLES = ("shape", "context")
+
+# Horizontal shift that centers each region's shape in the legend icon
+# so all "shape" icons line up in one column
+_REGION_SHIFT = {
+    "left": 0.5,
+    "right": -0.5,
+    "overlap": 0.0,
+    "left_only": 0.75,
+    "right_only": -0.75,
+}
+
+
 @dataclass(frozen=True)
 class RegionKey:
     """Legend entry for one region of the two-circle diagram."""
@@ -20,61 +38,103 @@ class RegionKey:
     color: str
 
 
+def _arc(center, r, start, end, sign, n=100):
+    """Points along a circle arc; sign=-1 mirrors it horizontally."""
+
+    t = np.linspace(start, end, n)
+    return np.column_stack(
+        [center[0] + sign * r * np.cos(t), center[1] + r * np.sin(t)]
+    )
+
+
+def _crescent(own, other, r):
+    """Outline of the part of the `own` circle outside the `other` one."""
+
+    sign = 1 if other[0] > own[0] else -1
+    alpha = np.arccos(abs(other[0] - own[0]) / (2 * r))
+    return np.vstack(
+        [
+            _arc(own, r, alpha, 2 * np.pi - alpha, sign),
+            _arc(other, r, np.pi + alpha, np.pi - alpha, sign),
+        ]
+    )
+
+
+def _lens(left, rigth, r):
+    """Outline of the overlap between two circles."""
+
+    alpha = np.arccos((rigth[0] - left[0]) / (2 * r))
+    return np.vstack(
+        [
+            _arc(left, r, -alpha, alpha, 1),
+            _arc(rigth, r, np.pi - alpha, np.pi + alpha, 1),
+        ]
+    )
+
+
 class RegionHandler(HandlerBase):
-    """Draws a small two-circle icon with only the entry's region filled"""
+    """Draws a legend icon for one region, in the given legend style."""
+
+    def __init__(self, style="shape", **kwargs):
+        super().__init__(**kwargs)
+        self.style = style
 
     def create_artists(
         self, legend, key, xdescent, ydescent, width, height, fontsize, trans
     ):
         r = height / 2
-        cx = width / 2 - xdescent
+        shift = _REGION_SHIFT[key.region] if self.style == "shape" else 0
+        cx = width / 2 - xdescent + shift * r
         cy = height / 2 - ydescent
         left = (cx - r / 2, cy)
         right = (cx + r / 2, cy)
-        artists = []
 
-        def circle(center, **kwargs):
-            patch = Circle(center, r, transform=trans, **kwargs)
-            artists.append(patch)
-            return patch
+        # "shape" borders the region itself; "context" borders the circles
+        if self.style == "shape":
+            edge = {"edgecolor": "black", "linewidth": 1}
+        else:
+            edge = {"edgecolor": "none"}
 
-        def clip_to(center):
-            return Circle(center, r, transform=trans)
+        # The region as a single shape
+        if key.region == "left":
+            region = Circle(left, r, **edge)
+        elif key.region == "right":
+            region = Circle(right, r, **edge)
+        elif key.region == "overlap":
+            region = Polygon(_lens(left, right, r), closed=True, **edge)
+        elif key.region == "left_only":
+            region = Polygon(_crescent(left, right, r), closed=True, **edge)
+        else:  # "right_only"
+            region = Polygon(_crescent(right, left, r), closed=True, **edge)
 
-        # Fill the region this entry represents
-        if key.region in ("left", "left_only"):
-            circle(left, facecolor=key.color, edgecolor="none")
-        if key.region in ("right", "right_only"):
-            circle(right, facecolor=key.color, edgecolor="none")
-        if key.region == "overlap":
-            circle(right, facecolor=key.color, edgecolor="none").set_clip_path(
-                clip_to(left)
-            )
+        region.set_facecolor(key.color)
+        region.set_transform(trans)
+        artists = [region]
 
-        # For the "only" regions, blank out the overlap again
-        if key.region == "left_only":
-            circle(right, facecolor="white", edgecolor="none").set_clip_path(
-                clip_to(left)
-            )
-        if key.region == "right_only":
-            circle(left, facecolor="white", edgecolor="none").set_clip_path(
-                clip_to(right)
-            )
-
-        # Outlines of both circles on top
-        circle(left, facecolor="none", edgecolor="black", linewidth=1)
-        circle(right, facecolor="none", edgecolor="black", linewidth=1)
+        # Both circle outlines on top, to show where the region sits
+        if self.style == "context":
+            for center in (left, right):
+                artists.append(
+                    Circle(
+                        center,
+                        r,
+                        transform=trans,
+                        facecolor="none",
+                        edgecolor="black",
+                        linewidth=1,
+                    )
+                )
         return artists
 
 
 def overlap_circles(
     radius=1.0,
     distance=None,
-    # colors=("tab:blue", "tab:orange", "tab:green", "#aec7e8", "#ffbb78"),
-    colors=("tab:blue", "tab:orange", "tab:green", "#33a8de", "#faa805"),
+    colors=OVERLAP_CIRCLE_COLORS,
     labels=None,
     label_fontsize=14,
     legend_labels=None,
+    legend_style="shape",
     legend_fontsize=12,
     edgecolor="black",
     linewidth=2,
@@ -84,13 +144,33 @@ def overlap_circles(
     """
     Draw two equal circles side by side with a colored overlap.
 
-    `distance` is the distance between the centers (defaults to `radius`).
-    `colors` are (left, right, overlap).
-    `labels` are optional text inside the regions: (left, right, overlap).
-    `legend_labels` are optional legend entries, in this order:
-        (left circle, right circle, overlap, left part only, right part only).
-    Returns (fig, ax).
+    Parameters
+    ----------
+    radius: float
+        Radius of both circles.
+    distance: float
+        Distance between circle centers. Defaults to radius.
+    colors: tuple
+        Colors in the order (left, right, overlap, left_only, right_only).
+    labels: tuple, optional
+        Text labels for left, right and overlap regions.
+    legend_labels: tuple, optional
+        Legend labels in the order (left, right, overlap, left_only, right_only).
+    legend_style: str
+        "shape" (each region on its own, with its own border)
+        "context" (each region inside both circle outlines)
+
+    Returns
+    -------
+    fig, ax
+        Matplotlib figure and axes.
     """
+
+    if legend_style not in LEGEND_STYLES:
+        raise ValueError(
+            f"legend_style must be one of {LEGEND_STYLES}, got {legend_style!r}"
+        )
+
     distance = radius if distance is None else distance
     left = (-distance / 2, 0)
     right = (distance / 2, 0)
@@ -123,7 +203,7 @@ def overlap_circles(
 
     # Optional labels inside the regions
     if labels is not None:
-        for x, text in zip((-radius, radius, 0), labels):
+        for x, text in zip((left[0], right[0], 0), labels):
             ax.text(
                 x,
                 0,
@@ -146,7 +226,7 @@ def overlap_circles(
         ax.legend(
             keys,
             legend_labels,
-            handler_map={RegionKey: RegionHandler()},
+            handler_map={RegionKey: RegionHandler(style=legend_style)},
             handlelength=3,
             handleheight=2,
             fontsize=legend_fontsize,

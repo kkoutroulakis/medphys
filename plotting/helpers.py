@@ -1,11 +1,14 @@
 """Reusable plotting helpers: load data from Excel, draw plots"""
 
-from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+from config import AXIS_STYLES, COLORS
+
+from .statistics import bland_altman_stats
 
 # ---------------------------------------
 # Global style for plots
@@ -28,42 +31,6 @@ def load_excel(path, sheet_name=0, skiprows=0, usecols=None, nrows=None):
 # ---------------------------------------
 # Bland-Altman
 # ---------------------------------------
-@dataclass
-class BlandAltmanStats:
-    bias: float
-    sd: float
-    lower_loa: float
-    upper_loa: float
-    n: int
-
-    def __str__(self):
-        return (
-            f"n = {self.n}\n"
-            f"Mean difference (bias): {self.bias:.3f}\n"
-            f"SD of MD: {self.sd:.3f}\n"
-            f"Limits of agreement: {self.lower_loa:.3f} to {self.upper_loa:.3f}\n"
-        )
-
-
-def bland_altam_stats(a, b):
-    """
-    Compute bias and 95% limits of agreement for a - b.
-    """
-
-    data = pd.DataFrame({"a": a, "b": b}).dropna()
-    diff = data["a"] - data["b"]  # x-axis: difference between methods
-    bias = diff.mean()
-    sd = diff.std(ddof=1)  # standard deviation of the differences
-
-    return BlandAltmanStats(
-        bias=bias,
-        sd=sd,
-        lower_loa=bias - 1.96 * sd,
-        upper_loa=bias + 1.96 * sd,
-        n=len(diff),
-    )
-
-
 def bland_altman_plot(
     a,
     b,
@@ -74,6 +41,7 @@ def bland_altman_plot(
     ylim=None,
     xticks=None,
     yticks=None,
+    show_loa_labels=True,
     ax=None,
     save_path=None,
 ):
@@ -85,34 +53,39 @@ def bland_altman_plot(
     """
 
     data = pd.DataFrame({"a": a, "b": b}).dropna()
+
     mean = (data["a"] + data["b"]) / 2
     diff = data["a"] - data["b"]
-    stats = bland_altam_stats(data["a"], data["b"])
+
+    stats = bland_altman_stats(data["a"], data["b"])
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 6))
     else:
         fig = ax.figure
 
-    # ax.scatter(mean, diff, alpha=0.7, edgecolor="k")
-    ax.scatter(mean, diff, color="red", marker="s")
-    ax.axhline(
-        stats.bias, color="black", linestyle="-", label=f"Mean diff = {stats.bias:.2f}"
-    )
-    ax.axhline(
-        stats.upper_loa,
-        color="black",
-        linestyle=":",
-        label=f"+1.96 SD = {stats.upper_loa:.2f}",
-    )
-    ax.axhline(
-        stats.lower_loa,
-        color="black",
-        linestyle=":",
-        label=f"-1.96 SD = {stats.lower_loa:.2f}",
-    )
-    # ax.axhline(0, color="grey", linewidth="0.8")
-    # ax.legend()
+    ax.scatter(mean, diff, color=COLORS["red"], marker="s")
+
+    ax.axhline(stats.bias, color=COLORS["black"], linestyle="-")
+    ax.axhline(stats.upper_loa, color=COLORS["black"], linestyle=":")
+    ax.axhline(stats.lower_loa, color=COLORS["black"], linestyle=":")
+
+    if show_loa_labels:
+        for value, label in [
+            (stats.upper_loa, f"+1.96 SD\n{stats.upper_loa:.2f}"),
+            (stats.bias, f"Mean\n{stats.bias:.2f}"),
+            (stats.lower_loa, f"-1.96 SD\n{stats.lower_loa:.2f}"),
+        ]:
+            ax.text(
+                1.00,
+                value,
+                label,
+                transform=ax.get_yaxis_transform(),
+                ha="right",
+                va="center_baseline",
+                fontsize=AXIS_STYLES["tick_fontsize"],
+                clip_on=False,
+            )
 
     _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks)
     _save(fig, save_path)
@@ -127,6 +100,7 @@ def grouped_bar_chart(
     df,
     value_cols,
     category_col=None,
+    categories=None,
     labels=None,
     colors=None,
     title=None,
@@ -148,7 +122,16 @@ def grouped_bar_chart(
         fig = ax.figure
 
     labels = labels or value_cols
-    categories = df[category_col] if category_col is not None else range(1, len(df) + 1)
+
+    if categories is not None:
+        if len(categories) != len(df):
+            raise ValueError(f"Got {len(categories)} categories for {len(df)} rows.")
+        tick_labels = categories
+    elif category_col is not None:
+        tick_labels = df[category_col]
+    else:
+        tick_labels = range(1, len(df) + 1)
+
     n_series = len(value_cols)
     x = np.arange(len(df))
     width = bar_width / n_series
@@ -164,10 +147,13 @@ def grouped_bar_chart(
         )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(categories)
+    ax.set_xticklabels(tick_labels)
     ax.set_xlim(-0.6, len(df) - 0.4)
     ax.grid(axis="x", visible=False)
-    ax.legend(fontsize=12)
+    ax.legend(
+        prop={"size": AXIS_STYLES["legend"], "weight": AXIS_STYLES["fontweight"]},
+        frameon=False,
+    )
 
     _style_axes(ax, title, xlabel, ylabel, None, ylim, None, yticks)
     _save(fig, save_path)
@@ -178,50 +164,76 @@ def grouped_bar_chart(
 # ---------------------------------------------------------------------------
 # Internal helpers (shared styling and saving)
 # ---------------------------------------------------------------------------
-def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks):
+def _style_axes(ax, title, xlabel, ylabel, xlim, ylim, xticks, yticks, xrotation=0):
+    # Title
     if title is not None:
-        ax.set_title(title)
+        ax.set_title(
+            title,
+            fontsize=AXIS_STYLES["fontsize"],
+            fontweight=AXIS_STYLES["fontweight"],
+        )
 
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    # Axis labels
+    ax.set_xlabel(
+        xlabel, fontsize=AXIS_STYLES["fontsize"], fontweight=AXIS_STYLES["fontweight"]
+    )
+    ax.set_ylabel(
+        ylabel, fontsize=AXIS_STYLES["fontsize"], fontweight=AXIS_STYLES["fontweight"]
+    )
 
+    # Axis limits
     if xlim is not None:
         ax.set_xlim(xlim)
     if ylim is not None:
         ax.set_ylim(ylim)
+
+    # Axis ticks
     if xticks is not None:
         ax.set_xticks(xticks)
     if yticks is not None:
         ax.set_yticks(yticks)
-    # ax.grid(alpha=0.3)
+
+    # Rotate x-axis tick label when needed
+    ax.tick_params(axis="x", labelrotation=xrotation)
+
+    # Bold tick labels and set their font size
+    ax.tick_params(
+        axis="both",
+        width=AXIS_STYLES["tick_width"],
+        length=AXIS_STYLES["tick_length"],
+        labelsize=AXIS_STYLES["fontsize"],
+    )
+    plt.setp(
+        ax.get_xticklabels() + ax.get_yticklabels(),
+        fontweight=AXIS_STYLES["fontweight"],
+    )
 
     # Show only left and bottom axis lines
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    # Bold title and axis labels
-    ax.title.set_fontweight("bold")
-    ax.xaxis.label.set_fontweight("bold")
-    ax.yaxis.label.set_fontweight("bold")
-
-    # Enlarge font size on x,y axis
-    ax.tick_params(width=2, length=6, labelsize=16)
-    ax.set_xlabel(xlabel, fontsize=16)
-    ax.set_ylabel(ylabel, fontsize=16)
-
-    # Bold tick values
-    plt.setp(ax.get_xticklabels() + ax.get_yticklabels(), fontweight="bold")
-
     # Thicker axis lines and tick marks
-    ax.spines["left"].set_linewidth(2)
-    ax.spines["bottom"].set_linewidth(2)
-    ax.tick_params(width=2, length=6)
+    ax.spines["left"].set_linewidth(AXIS_STYLES["spine_linewidth"])
+    ax.spines["bottom"].set_linewidth(AXIS_STYLES["spine_linewidth"])
+
+    # Optional grid
+    # ax.grid(alpha=0.3)
 
 
-def _save(fig, save_path):
-    if save_path is not None:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        fig.tight_layout()
-        # fig.savefig(save_path, dpi=300) # TODO: for .png
-        fig.savefig(save_path, dpi=300, pil_kwargs={"quality": 95})
+def _save(fig, save_path, dpi=300, quality=95, bbox_inches="tight"):
+    if save_path is None:
+        return
+
+    save_path = Path(save_path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fig.tight_layout()
+
+    save_kwargs = {"dpi": dpi, "bbox_inches": bbox_inches}
+
+    # JPEG specific options
+    if save_path.suffix.lower() in {".jpg", ".jpeg"}:
+        save_kwargs["pil_kwargs"] = {"quality": quality}
+
+    fig.savefig(save_path, **save_kwargs)
+    plt.close(fig)
