@@ -1,7 +1,7 @@
 [project]
 name = "medphys"
 version = "0.1.0"
-description = "Add your description here"
+description = "Figures for a medical physics study, generated from Excel data"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -13,5 +13,14 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pytest>=9.2.0",
     "ruff>=0.16.9",
 ]
+
+[tool.ruff.lint]
+# Defaults (E4, E7, E9, F) plus import sorting, bugbear and pyupgrade
+extend-select = ["I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
