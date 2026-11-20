@@ -22,19 +22,20 @@ from .style import COLORS
     option_required=True,
 )
 def run_bland_altman(structure):
-    value_cols = ["VMAT_REF", "VMAT_Arc1"]
+    settings = dict(BA_STRUCTURES[structure])
+    col_a, col_b = settings.pop("value_cols")
 
     plot_data = load_excel(
         BLAND_ALTMAN_DATA,
         sheet_name=structure,
-        usecols=value_cols,
+        usecols=[col_a, col_b],
     )
 
     _, _, status = bland_altman_plot(
-        plot_data[value_cols[0]],
-        plot_data[value_cols[1]],
-        save_path=OUT_DIR / "bland_altman" / f"ba-{structure}.jpg",
-        **BA_STRUCTURES[structure],
+        plot_data[col_a],
+        plot_data[col_b],
+        save_path=OUT_DIR / "bland_altman" / f"{structure}_ba.jpg",
+        **settings,
     )
     print(f"structure: {structure.replace('_', ' ').title()}\nstats: {status}")
 
