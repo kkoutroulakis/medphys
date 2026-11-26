@@ -34,7 +34,7 @@ def run_bland_altman(structure):
     _, _, status = bland_altman_plot(
         plot_data[col_a],
         plot_data[col_b],
-        save_path=OUT_DIR / "bland_altman" / f"{structure}_ba.jpg",
+        save_path=OUT_DIR / "bland_altman" / f"{structure}.jpg",
         **settings,
     )
     print(f"structure: {structure.replace('_', ' ').title()}\nstats: {status}")
@@ -84,7 +84,7 @@ def run_t_barchart():
         ylabel=r"GTV Volume (cm$^{3}$)",
         ylim=(0, 180),
         yticks=np.arange(0, 181, 20),
-        save_path=OUT_DIR / "barcharts" / "tripple_barchart.jpg",
+        save_path=OUT_DIR / "barcharts" / "triple_barchart.jpg",
     )
 
 
